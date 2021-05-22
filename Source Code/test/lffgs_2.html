@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>Single Image WMS</title>
+    
+   <!-- From https://openlayers.org/en/latest/examples/wms-image.html -->    
+
+ <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+    
+
+ </head>
+  <body>
+    <div id="map" class="map"></div>
+    <script>
+      var layers = [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:parcels'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        })
+      ];
+	  
+
+		
+      var map = new ol.Map({
+        layers: layers,
+        target: 'map',
+        view: new ol.View({
+          center: [-8512597,5231612],
+          zoom: 10
+        })
+      });
+
+
+
+	
+	
+	
+    </script>
+  </body>
+</html>
+			

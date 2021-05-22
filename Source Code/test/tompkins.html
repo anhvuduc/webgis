@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <title>Single Image WMS</title>
+    
+   <!-- From https://openlayers.org/en/latest/examples/wms-image.html -->    
+
+ <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+   
+
+ </head>
+  <body>
+    <div id="map" class="map"></div>
+ <script>
+ 
+    var layers = [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:tcroads'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        })
+      ];
+
+var layer1 = new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:floodzones'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        });
+
+var layer2 = new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:tcbuildings'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        });
+
+var layer3 = new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:parcels'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        });		
+		
+		
+            // add the created layers to the map
+            // (if you want custom layers to show up they must be here as well)
+			
+var map = new ol.Map({
+			layers: layers,
+			target: 'map',
+			view: new ol.View({
+			height: 500,
+			center: [-8512597,5231612],
+			zoom: 10
+							})
+			});
+ 			
+
+
+map.addLayer(layer3);
+map.addLayer(layer2);
+map.addLayer(layer1);
+
+
+
+function switchlayer(thelayer) {
+  var layer = {
+    layer1: layer1,
+    layer2: layer2,
+	layer3: layer3
+  }
+  [thelayer];
+  layer.setVisible(!layer.getVisible())
+
+}
+         
+    </script>
+  </head>
+  <body>
+    <h3>Geoserver OpenLayers Demo</h3>
+    <div id="map"></div>
+  
+	<div>
+		<label class="checkbox-inline"><input type="checkbox" id="layer1" onchange="switchlayer(this.id)" checked="checked"> Floodzones</label>
+		<label class="checkbox-inline"><input type="checkbox" id="layer2" onchange="switchlayer(this.id)" checked="checked"> Buildings</label>
+		<label class="checkbox-inline"><input type="checkbox" id="layer3" onchange="switchlayer(this.id)" checked="checked"> Parcels</label>
+	</div>
+  </body>
+</html>

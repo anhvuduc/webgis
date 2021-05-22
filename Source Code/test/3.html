@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Single Image WMS</title>
+ <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4.js"></script>
+<script src="https://epsg.io/32618.js"></script>
+
+  </head>
+  <body>
+
+  <form>
+  Flood Zone:<br>
+  <input id="floodzone" type="text" value="AE">  Distance(m):
+  <input id="distance" type="text" value=100>  <input type="button" value="Find Flood" onclick="findFlood();">	
+</form>
+	<div>
+		<label class="checkbox-inline"><input type="checkbox" id="firestations" onchange="switchlayer(this.id)" checked="checked"> Fire Stations</label>
+		<label class="checkbox-inline"><input type="checkbox" id="firecql" onchange="switchlayer(this.id)" checked="checked"> Fire CQL</label>
+		<label class="checkbox-inline"><input type="checkbox" id="parcels" onchange="switchlayer(this.id)" checked="checked"> Parcels</label>
+		<label class="checkbox-inline"><input type="checkbox" id="parcelnear" onchange="switchlayer(this.id)" checked="checked"> Parcels Near Flood</label>
+
+		</div>
+    <div id="map", class="map"></div>
+	<div id="info">&nbsp;</div>	
+	 <style>
+      .map {
+        width: 100%;
+        height:500px;
+      }
+    </style>    
+	
+	<script src="3.js"></script>
+  </body>
+</html>

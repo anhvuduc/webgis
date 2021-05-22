@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Single Image WMS</title>
+ <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4.js"></script>
+<script src="https://epsg.io/32618.js"></script>
+
+  </head>
+  <body>
+  <form>
+  Flood Zone:<br>
+  <input id="floodzone" type="text" value="AE">  Distance(m):
+  <input id="distance" type="text" value=100>  <input type="button" value="Find Flood" onclick="findFlood();">	
+</form>
+	<div>
+		<label class="checkbox-inline"><input type="checkbox" id="firestations" onchange="switchlayer(this.id)" checked="checked"> Fire Stations</label>
+		<label class="checkbox-inline"><input type="checkbox" id="firecql" onchange="switchlayer(this.id)" checked="checked"> Fire CQL</label>
+		<label class="checkbox-inline"><input type="checkbox" id="parcels" onchange="switchlayer(this.id)" checked="checked"> Parcels</label>
+		<label class="checkbox-inline"><input type="checkbox" id="parcelnear" onchange="switchlayer(this.id)" checked="checked"> Parcels Near Flood</label>
+
+		</div>
+    <div id="map", class="map"></div>
+	<div id="info">&nbsp;</div>	
+	 <style>
+      .map {
+        width: 100%;
+        height:400px;
+      }
+    </style>    
+	
+	<script>
+
+// Create the map 
+
+      var view = new ol.View({
+          center: [-8512597,5231612],
+          zoom: 11      
+		  });
+
+       var map = new ol.Map({
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+        target: 'map',
+        view: view
+      });
+
+/////////////////////////////////////////////////////////
+	  
+// Add geoserver layers and a WMS....
+
+var theurl = 'http://localhost:8080/geoserver/foss4g/wms';
+
+
+// first step is to create an SQL View, and we'll access it here
+
+	var parcelnear = new ol.layer.Image({
+           source: new ol.source.ImageWMS({
+            url: theurl,
+           params: {'LAYERS': 'foss4g:parcelfz', 'viewparams': viewparameters},
+            serverType: 'geoserver'
+          })
+		});	
+	parcelnear.setOpacity(0.3);	
+	
+//  add the parcels layer. All other wms layers will following this pattern, but with a twist	
+	var parcels = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:parcels'},
+            serverType: 'geoserver'
+          })	
+		});		
+     parcels.setOpacity(0.3);
+  
+//  add firestations layer
+	var firestations = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:firestations'},
+            serverType: 'geoserver'
+          })
+		});			
+
+
+//	var cqlfilter = '';
+	var cqlfilter = 'DWITHIN (geom, POINT(360514  4698789),1000,meters)';
+//	var cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'INCLUDE\')), 2000, meters)';
+//	var cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'zone = \'\'AE\'\' \')), 15000, meters)' ;
+//	var cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'zone = \'\'' + document.getElementById('flood zone').value + '\'\' \')), ' + document.getElementById('distance').value + ', meters)' ;
+
+//var cqlfilter = 'INTERSECTS(geometry, querySingle(\'foss4g:tcparcel\',\'geometry\',\'trbk = \'\'11604327\'\' \'))';	
+//var cqlfilter = 'INTERSECTS(geometry,POLYGON((4.9635510369342647e5 3.7638427893375405e6, 4.9905221831296431e5 3.7620299745932613e6, 5.0099767803853255e5 3.7629142744685193e6, 5.0170511793873919e5 3.7639754343188293e6, 5.0130718299487297e5 3.765788249063109e6, 5.0024602314456302e5 3.7669378389009447e6, 4.9945015325683053e5 3.7672473438572851e6, 4.9847742339404637e5 3.7669378389009447e6, 4.9679725363105559e5 3.765699819075583e6, 4.9635510369342647e5 3.7638427893375405e6)))';
+
+	var firecql = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:firestations','CQL_FILTER': cqlfilter},
+            serverType: 'geoserver'
+          })
+		});	
+		
+	var parcelcql = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:parcels','CQL_FILTER': cqlfilter},
+            serverType: 'geoserver'
+          })
+		});	
+			
+		
+	
+///////////////////////////////////////////////////////////////////////
+//Add a vector layer...
+
+wfs_url = 'http://localhost:8080/geoserver/foss4g/wfs?service=WFS&' +
+              'version=1.1.0' +
+			  '&request=GetFeature' +
+			  '&typename=foss4g:firestations&' +
+			  '&CQL_FILTER=' + cqlfilter + '&' +
+              'outputFormat=application/json&srsname=EPSG:32618&' +
+              ',EPSG:32618';
+prompt('',wfs_url);		  
+var vectorSource = new ol.source.Vector({
+        format: new ol.format.GeoJSON(),
+        url: function(extent) {
+          return 'http://localhost:8080/geoserver/foss4g/wfs?service=WFS&' +
+              'version=1.1.0' +
+			  '&request=GetFeature' +
+			  '&typename=foss4g:firestations&' +
+			  //'&CQL_FILTER=' + cqlfilter + '&' +
+              'outputFormat=application/json' +
+			  '&srsname=EPSG:32618&,EPSG:32618';
+        },
+        strategy: ol.loadingstrategy.bbox
+      });
+
+      var vector = new ol.layer.Vector({
+        source: vectorSource
+      });
+
+///////////////////////////////////////////////////////////////////////
+
+	map.addLayer(parcels);
+	map.addLayer(firecql);
+	map.addLayer(vector);
+	map.addLayer(firestations);
+	map.addLayer(parcelnear);
+	map.addLayer(parcelcql);
+
+//////////////////////////////////////////////
+
+	var viewparameters = 'zonename:' + document.getElementById('floodzone').value + ';d:' + document.getElementById('distance').value;
+
+// This function takes the input from the HTML form and updates the filters 
+// to select schools that are a certain distance from the selected factory.
+// This is shown for both a CQL filter and an SQL View.
+
+function findFlood() {
+	cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'zone = \'\'' + document.getElementById('floodzone').value + '\'\' \')), ' + document.getElementById('distance').value + ', meters)' ;
+//	alert(cqlfilter);
+	firecql.getSource().updateParams({'LAYERS': 'foss4g:firestations','CQL_FILTER': cqlfilter});
+	viewparameters = 'zonename:' + document.getElementById('floodzone').value + ';d:' + document.getElementById('distance').value;
+	parcelnear.getSource().updateParams({'LAYERS': 'foss4g:parcelfz', 'viewparams': viewparameters});
+}	  
+
+//////////////////////////////////////////////
+
+// We are going to extend the application to handle user input. In this case, if the user 
+// clicks on the map, we fire off an event function.  This event will specifically 
+// get the features from the firestations layer that is X meters from the point we clicked.  
+
+ map.on('singleclick', function(evt) {
+// update vector data
+// When we click on the screen, the coordinates are in Web Mercator.  We need to 
+// convert these coordinates into UTM zone 18N.  Once the coordinates are converted
+// (from the next line), we can pass those coordinates to the SQL query in Geoserver.
+	utm = proj4('EPSG:3857','EPSG:32618',evt.coordinate);
+	cqlfilter = 'DWITHIN(geom,Point(' + utm[0] + ' ' + utm[1] +'),' + document.getElementById('distance').value + ',meters)';
+//	alert(cqlfilter);
+	vector.getSource().clear();
+	parcelcql.getSource().updateParams({'LAYERS': 'foss4g:parcels','CQL_FILTER': cqlfilter});
+
+								 }
+		);
+		
+	function switchlayer(thelayer) {
+	  var layer = {
+		parcels: parcels,
+		firecql: firecql,
+		firestations: firestations,
+		parcelnear: parcelnear
+	  }
+	  [thelayer];
+	  layer.setVisible(!layer.getVisible())
+
+	}
+////////////////////////////
+
+    </script>
+  </body>
+</html>

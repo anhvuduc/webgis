@@ -1,0 +1,128 @@
+<html>
+ <head>
+    <title>Single Image WMS</title>
+    
+   <!-- From https://openlayers.org/en/latest/examples/wms-image.html -->    
+
+ <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/build/ol.js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.2.1/css/ol.css" type="text/css">
+   </head>
+  <body>
+     <div id="map" class="map"></div>
+    <script>
+ 
+// Create the map 
+
+     var layers = [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: 'http://localhost:8080/geoserver/foss4g/wms',  
+            params: {'LAYERS': 'foss4g:tcroads'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        })
+      ];
+
+var theurl = 'http://localhost:8080/geoserver/foss4g/wms';
+
+//  add the parcels layer. All other wms layers will following this pattern, but with a twist	
+	var parcels = new ol.layer.Image({
+          extent: [-13884991, 2870341, -7455066, 6338219],
+          source: new ol.source.ImageWMS({
+
+            //Replace 'localhost' below with your server IP or hostname 
+
+            url: theurl,  
+            params: {'LAYERS': 'foss4g:parcels'},
+            ratio: 1,
+            serverType: 'geoserver'
+          })
+        });		
+
+     parcels.setOpacity(0.3);
+	 
+/////////////////////////////////////////////////////////
+	  
+// Add geoserver layers and a WMS....
+
+// this line represents the generic wms url so we don't have to keep adding it
+var theurl = 'http://localhost:8080/geoserver/foss4g/wms';
+
+	 
+var map = new ol.Map({
+			layers: layers,
+			target: 'map',
+			view: new ol.View({
+			center: [-8512597,5231612],
+			zoom: 10
+							})
+			});
+			
+//map.addLayer(parcels);	
+  // this is how you can change the opacity of the layer
+  
+//  add the floodzones layer
+	var floodzones = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:floodzones'},
+            serverType: 'geoserver'
+          })
+		});	
+
+
+//  CQL filters - they are just like we used in previous lectures, only now
+//  we are putting them in the javascript in our browser.  We'll work with
+//  the fire stations first, because that is fast.  Then, we'll transition
+//  to the parcels.
+
+    var cqlfilter = '';
+
+//	var cqlfilter = 'DWITHIN (geom, POINT(360514  4698789),12000,meters)';
+//	var cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'INCLUDE\')), 500, meters)';
+//	var cqlfilter = 'DWITHIN(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'zone = \'\'A\'\' \')), 100, meters)' ;
+//	var cqlfilter = 'INTERSECTS(geom, collectGeometries(queryCollection(\'foss4g:floodzones\',\'geom\',\'zone = \'\'A\'\' \')), 100, meters)' ;
+
+// we'll have to add the school district first...
+//	var cqlfilter = 'INTERSECTS(geom, querySingle(\'foss4g:schooldistricts\',\'geom\',\'name = \'\'LANSING CENTRAL SCHOOL DISTRICT\'\' \'))';	
+
+alert(cqlfilter);
+
+// Here we will create a firestation layer based on the CQL filter...
+	var firecql = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:firestations', 
+			'CQL_FILTER': cqlfilter},
+            serverType: 'geoserver'
+          })
+		});	
+
+//  Now, we'll create a parcel layer based on the CQL filter...		
+	var parcelcql = new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            url: theurl,
+            params: {'LAYERS': 'foss4g:parcels', 
+			'CQL_FILTER': cqlfilter},
+            serverType: 'geoserver'
+          })
+		});			
+			
+//  Now, we can add the layers to the map. Obviously, the parcel
+//  layer is going to take longer to display -- maybe too long.
+		
+
+//	map.addLayer(floodzones);
+	map.addLayer(firecql);
+	map.addLayer(parcelcql);
+    </script>
+  </body>
+</html>
